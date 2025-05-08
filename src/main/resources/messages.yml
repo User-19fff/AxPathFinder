@@ -1,0 +1,32 @@
+commands:
+  wand: "&aPath Wand eszközt kaptál!"
+  player-only: "&cEzt a parancsot csak játékos használhatja!"
+  player-not-found: "&cA játékos nem található: %player%"
+  path-started: "&aAz útvonal elindítva: %path%"
+  path-started-other: "&aÚtvonal elindítva %player% játékosnak: %path%"
+  path-not-found: "&cAz útvonal nem található: %path%"
+  path-cancelled: "&aÚtvonalak törölve: %count%"
+  path-cancelled-other: "&a%player% útvonalai törölve: %count%"
+  no-active-paths: "&cNincsenek aktív útvonalaid."
+  no-active-paths-other: "&c%player% játékosnak nincsenek aktív útvonalai."
+
+wand:
+  first-point: "&aElső pont kijelölve! Shift + jobb klikk a második pont kijelöléséhez."
+  second-point: "&aÚtvonal létrehozva: %path%"
+  no-first-point: "&cElőször jelöld ki az első pontot!"
+  enter-name: "&aAdd meg az útvonal nevét a chatben!"
+  error: "&cHiba történt az útvonal létrehozásakor."
+
+default-messages:
+  started:
+    - ""
+    - "&aKövesd a kijelölt részecskéket, hogy odatalálj a célhoz!"
+    - ""
+  finished:
+    - ""
+    - "&aMegérkeztél a célhoz!"
+    - ""
+  expired:
+    - ""
+    - "&cAz útvonal ideje lejárt!"
+    - ""

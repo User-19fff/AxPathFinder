@@ -1,0 +1,46 @@
+settings:
+  pathfinding:
+    max-search-distance: 100
+    allow-diagonal: true
+    check-line-of-sight: true
+    path-update-interval: 5  # Path recalculation interval in ticks
+  particles:
+    default-type: DUST
+    default-color: '0,191,255'  # Default light blue color
+    density: 3                  # Particle density multiplier
+    height-offset: 0.1          # How high above the ground to render particles
+    render-distance: 30         # Maximum render distance in blocks
+    update-interval: 2          # Particle rendering update interval in ticks
+    show-destination: true      # Whether to show special particles at the destination
+    target-framerate: 20        # Target particle update framerate
+    checkpoint-spacing: 10      # Distance between checkpoints in blocks
+    checkpoint-size: 0.5        # Size of checkpoint indicators
+
+paths:
+  enchantpath:
+    messages:
+      started:
+        - ""
+        - "&aKövesd a kijelölt részecskéket, hogy odatalálj a célhoz!"
+        - ""
+      finished:
+        - ""
+        - "&dIdeértél!"
+        - ""
+      expired:
+        - ""
+        - "&cAz útvonal ideje lejárt!"
+        - ""
+    settings:
+      duration: 120
+      track-player: true
+      recalculate-distance: 10
+      particles:
+        type: DUST_COLOR_TRANSITION
+        color: '235,52,219'
+        fade-color: '235,52,137'
+    destination:
+      world: "spawn"
+      x: -122
+      y: 160
+      z: -197

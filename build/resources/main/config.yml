@@ -1,0 +1,35 @@
+aliases:
+  - "pathfinder"
+  - "pathf"
+  - "axpathfinder"
+  - "pf"
+  - "path"
+
+default-messages:
+  started:
+    - ""
+    - "&aKövesd a kijelölt részecskéket, hogy odatalálj a célhoz!"
+    - ""
+  finished:
+    - ""
+    - "&aMegérkeztél a célhoz!"
+    - ""
+  expired:
+    - ""
+    - "&cAz útvonal ideje lejárt!"
+    - ""
+
+default-path-settings:
+  duration: 120
+  track-player: true
+  recalculate-distance: 10
+  particles:
+    type: DUST
+    color: "0,191,255"
+
+settings:
+  update-interval: 10
+  
+  debug:
+    enabled: false
+    log-pathfinding: false

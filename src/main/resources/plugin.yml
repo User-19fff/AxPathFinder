@@ -1,0 +1,5 @@
+name: AxPathFinder
+version: '1.0.0'
+main: com.artillexstudios.axpathfinder.AxPathFinder
+api-version: '1.21'
+authors: [ coma112 ]
