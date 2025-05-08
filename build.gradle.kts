@@ -1,8 +1,8 @@
 plugins {
     id("java")
-    id("com.gradleup.shadow") version("8.3.2")
-    id("io.github.revxrsal.zapper") version("1.0.2")
-    id("io.freefair.lombok") version("8.11")
+    id("com.gradleup.shadow") version "8.3.2"
+    id("io.github.revxrsal.zapper") version "1.0.2"
+    id("io.freefair.lombok") version "8.11"
 }
 
 group = "com.artillexstudios"
