@@ -22,7 +22,6 @@ public class PathManager {
     private final AxPathFinder plugin = AxPathFinder.getInstance();
     private final ConcurrentHashMap<String, Path> activePaths = new ConcurrentHashMap<>();
     private final PathFinder pathfinder;
-    private final ConcurrentHashMap<UUID, Location> wandFirstPoints = new ConcurrentHashMap<>();
     private final PathRenderer pathRenderer;
 
     public PathManager(PathRenderer pathRenderer) {
@@ -30,20 +29,20 @@ public class PathManager {
         this.pathRenderer = pathRenderer;
     }
 
-    public boolean startPath(Player player, String pathType) {
-        if (player == null || pathType == null) return false;
+    public void startPath(@Nullable Player player, @Nullable String pathType) {
+        if (player == null || pathType == null) return;
 
         Section pathConfig = plugin.getPaths().getSection("paths." + pathType);
 
         if (pathConfig == null) {
             plugin.getLogger().warning("Az útvonal nem létezik: " + pathType);
-            return false;
+            return;
         }
 
         Section destSection = pathConfig.getSection("destination");
         if (destSection == null) {
             plugin.getLogger().warning("Az útvonalnak nincs célpontja: " + pathType);
-            return false;
+            return;
         }
 
         String worldName = destSection.getString("world", "world");
@@ -66,7 +65,7 @@ public class PathManager {
 
         if (points == null || points.isEmpty()) {
             plugin.getLogger().warning("Nem sikerült útvonalat találni: " + player.getName() + " -> " + destination);
-            return false;
+            return;
         }
 
         path.setPathPoints(points);
@@ -76,7 +75,6 @@ public class PathManager {
         List<String> startMessages = pathConfig.getStringList("messages.started");
         PlayerUtils.sendMessages(player, startMessages);
 
-        return true;
     }
 
     public int cancelPlayerPaths(@Nullable Player player) {
@@ -170,29 +168,6 @@ public class PathManager {
                 endLoc.getZ());
 
         return true;
-    }
-
-    public void setWandFirstPoint(@NotNull Player player, @NotNull Location location) {
-        wandFirstPoints.put(player.getUniqueId(), location.clone());
-    }
-
-    public boolean processWandSecondPoint(@NotNull Player player, String pathName, Location location) {
-        UUID playerUUID = player.getUniqueId();
-        Location firstPoint = wandFirstPoints.get(playerUUID);
-
-        if (firstPoint == null) {
-            return false;
-        }
-
-        boolean result = createPathFromPoints(pathName, firstPoint, location);
-
-        wandFirstPoints.remove(playerUUID);
-
-        return result;
-    }
-
-    public boolean hasWandFirstPoint(@NotNull Player player) {
-        return wandFirstPoints.containsKey(player.getUniqueId());
     }
 
     public Map<String, Path> getActivePaths() {

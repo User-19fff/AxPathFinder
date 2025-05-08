@@ -15,11 +15,9 @@ import revxrsal.commands.orphan.OrphanCommand;
 public class CommandPath implements OrphanCommand {
     private final AxPathFinder plugin = AxPathFinder.getInstance();
     private final PathManager pathManager;
-    private final WandItem wandItem;
 
-    public CommandPath(PathManager pathManager, WandItem wandItem) {
+    public CommandPath(PathManager pathManager) {
         this.pathManager = pathManager;
-        this.wandItem = wandItem;
     }
 
     @Subcommand("reload")
@@ -30,42 +28,20 @@ public class CommandPath implements OrphanCommand {
         sender.sendMessage(MessageKeys.RELOAD.getMessage());
     }
 
-    @Subcommand("wand")
-    @CommandPermission("axpath.wand")
-    public void onWand(@NotNull Player player) {
-        player.getInventory().addItem(wandItem.createWand());
-        PlayerUtils.sendMessage(player, plugin.getLanguage().getString("commands.wand"));
-    }
-
     @Subcommand("start")
     @CommandPermission("axpath.start.others")
-    public void onStartOther(Player player, Player target, String pathName) {
-        startPath(player, target, pathName);
+    public void onStartOther(@NotNull CommandSender sender, @NotNull Player target, @NotNull String pathName) {
+        pathManager.startPath(target, pathName);
     }
 
     @Subcommand("cancel")
     @CommandPermission("axpath.cancel.others")
-    public void onCancelOther(Player player, Player target) {
+    public void onCancelOther(@NotNull Player player, @NotNull Player target) {
         int count = pathManager.cancelPlayerPaths(target);
         if (count > 0) {
             PlayerUtils.sendMessage(player, plugin.getLanguage().getString("commands.path-cancelled-other")
                     .replace("%player%", target.getName())
                     .replace("%count%", String.valueOf(count)));
         } else PlayerUtils.sendMessage(player, plugin.getLanguage().getString("commands.no-active-paths-other").replace("%player%", target.getName()));
-    }
-
-    private void startPath(Player sender, Player target, String pathName) {
-        boolean success = pathManager.startPath(target, pathName);
-
-        if (success) {
-            if (sender != null && sender != target) {
-                PlayerUtils.sendMessage(sender, plugin.getLanguage().getString("commands.path-started-other")
-                        .replace("%player%", target.getName())
-                        .replace("%path%", pathName));
-            }
-        } else if (sender != null) {
-            PlayerUtils.sendMessage(sender, plugin.getLanguage().getString("commands.path-not-found")
-                    .replace("%path%", pathName));
-        }
     }
 }

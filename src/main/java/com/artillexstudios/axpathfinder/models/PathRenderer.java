@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PathRenderer {
@@ -72,8 +73,20 @@ public class PathRenderer {
         renderTasks.put(path.getId(), task);
     }
 
+    public void stopRendering(@NotNull String pathId) {
+        ScheduledTask task = renderTasks.remove(pathId);
+        if (task != null) task.cancel();
+    }
+
+    public void stopAll() {
+        for (ScheduledTask task : renderTasks.values()) {
+            task.cancel();
+        }
+        renderTasks.clear();
+    }
+
     @NotNull
-    private List<ParticlePoint> generateDetailedPathWithCollisionDetection(@NotNull List<PathPoint> points, World world) {
+    private List<ParticlePoint> generateDetailedPathWithCollisionDetection(@NotNull List<PathPoint> points, @NotNull World world) {
         List<ParticlePoint> particlePath = new ArrayList<>();
         if (points.size() < 2) return particlePath;
 
@@ -158,8 +171,7 @@ public class PathRenderer {
             double dxNext = next.getX() - current.getX();
             double dzNext = next.getZ() - current.getZ();
 
-            if ((Math.abs(dxPrev) > 0.5 && Math.abs(dzNext) > 0.5) ||
-                    (Math.abs(dzPrev) > 0.5 && Math.abs(dxNext) > 0.5)) {
+            if ((Math.abs(dxPrev) > 0.5 && Math.abs(dzNext) > 0.5) || (Math.abs(dzPrev) > 0.5 && Math.abs(dxNext) > 0.5)) {
 
                 PathPoint corner = new PathPoint(
                         current.getWorldName(),
@@ -212,19 +224,7 @@ public class PathRenderer {
         return finalPath;
     }
 
-    public void stopRendering(String pathId) {
-        ScheduledTask task = renderTasks.remove(pathId);
-        if (task != null) task.cancel();
-    }
-
-    public void stopAll() {
-        for (ScheduledTask task : renderTasks.values()) {
-            task.cancel();
-        }
-        renderTasks.clear();
-    }
-
-    private void renderParticles(@NotNull Path path, Player player) {
+    private void renderParticles(@NotNull Path path, @NotNull Player player) {
         List<PathPoint> points = path.getPathPoints();
         if (points.isEmpty()) return;
 
@@ -272,19 +272,17 @@ public class PathRenderer {
             if (!checkpoint.getWorldName().equals(world.getName())) continue;
 
             Location checkpointLoc = checkpoint.toLocation().add(0, heightOffset, 0);
-            renderCheckpointMarker(checkpointLoc, world, particle, player, color, fadeColor,
-                    checkpointIndex == 0 || checkpointIndex == points.size() - 1);
+            renderCheckpointMarker(checkpointLoc, world, particle, player, color, Objects.requireNonNull(fadeColor), checkpointIndex == 0 || checkpointIndex == points.size() - 1);
         }
 
         if (!points.isEmpty() && showCheckpoints) {
             PathPoint destination = points.getLast();
             Location destLoc = destination.toLocation().add(0, heightOffset, 0);
-            renderDestinationMarker(destLoc, world, particle, player, color, fadeColor);
+            renderDestinationMarker(destLoc, world, particle, player, color, Objects.requireNonNull(fadeColor));
         }
     }
 
-    private void renderCheckpointMarker(Location loc, World world, Particle particle,
-                                        Player player, Color color, Color fadeColor, boolean isEndpoint) {
+    private void renderCheckpointMarker(@NotNull Location loc, @NotNull World world, @NotNull Particle particle, @NotNull Player player, @NotNull Color color, @NotNull Color fadeColor, boolean isEndpoint) {
         double radius = checkpointSize;
         int particleCount = isEndpoint ? 16 : 12;
         float size = isEndpoint ? 1.3f : 1.0f;
@@ -300,8 +298,7 @@ public class PathRenderer {
         }
     }
 
-    private void renderDestinationMarker(Location destLoc, World world, Particle particle,
-                                         Player player, Color color, Color fadeColor) {
+    private void renderDestinationMarker(@NotNull Location destLoc, @NotNull World world, @NotNull Particle particle, @NotNull Player player, @NotNull Color color, @NotNull Color fadeColor) {
         double radius = 0.7;
         int particles = 16;
         double animationOffset = (System.currentTimeMillis() % 2000) / 2000.0;
