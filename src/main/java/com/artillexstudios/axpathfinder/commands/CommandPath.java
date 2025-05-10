@@ -2,7 +2,6 @@ package com.artillexstudios.axpathfinder.commands;
 
 import com.artillexstudios.axpathfinder.AxPathFinder;
 import com.artillexstudios.axpathfinder.identifiers.keys.MessageKeys;
-import com.artillexstudios.axpathfinder.item.WandItem;
 import com.artillexstudios.axpathfinder.managers.PathManager;
 import com.artillexstudios.axpathfinder.utils.PlayerUtils;
 import org.bukkit.command.CommandSender;

@@ -7,16 +7,20 @@ import com.artillexstudios.axpathfinder.data.ParticlePoint;
 import com.artillexstudios.axpathfinder.data.PathPoint;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PathRenderer {
@@ -29,6 +33,7 @@ public class PathRenderer {
 
     private final int checkpointSpacing;
     private final double checkpointSize;
+    private final Set<Material> passableMaterials = new HashSet<>();
 
     public PathRenderer() {
         this.updateInterval = Math.max(1, plugin.getPaths().getInt("settings.particles.update-interval", 5));
@@ -38,6 +43,47 @@ public class PathRenderer {
 
         this.checkpointSpacing = plugin.getPaths().getInt("settings.particles.checkpoint-spacing", 10);
         this.checkpointSize = plugin.getPaths().getDouble("settings.particles.checkpoint-size", 0.5);
+
+        initPassableMaterials();
+    }
+
+    private void initPassableMaterials() {
+        passableMaterials.add(Material.AIR);
+        passableMaterials.add(Material.CAVE_AIR);
+        passableMaterials.add(Material.VOID_AIR);
+
+        passableMaterials.add(Material.SHORT_GRASS);
+        passableMaterials.add(Material.TALL_GRASS);
+        passableMaterials.add(Material.FERN);
+        passableMaterials.add(Material.LARGE_FERN);
+
+        passableMaterials.add(Material.POPPY);
+        passableMaterials.add(Material.DANDELION);
+        passableMaterials.add(Material.BLUE_ORCHID);
+        passableMaterials.add(Material.ALLIUM);
+        passableMaterials.add(Material.AZURE_BLUET);
+        passableMaterials.add(Material.RED_TULIP);
+        passableMaterials.add(Material.ORANGE_TULIP);
+        passableMaterials.add(Material.WHITE_TULIP);
+        passableMaterials.add(Material.PINK_TULIP);
+        passableMaterials.add(Material.OXEYE_DAISY);
+        passableMaterials.add(Material.LILY_OF_THE_VALLEY);
+        passableMaterials.add(Material.CORNFLOWER);
+
+        passableMaterials.add(Material.TORCH);
+        passableMaterials.add(Material.WALL_TORCH);
+        passableMaterials.add(Material.REDSTONE_TORCH);
+        passableMaterials.add(Material.REDSTONE_WALL_TORCH);
+        passableMaterials.add(Material.SNOW);
+        passableMaterials.add(Material.RAIL);
+        passableMaterials.add(Material.POWERED_RAIL);
+        passableMaterials.add(Material.DETECTOR_RAIL);
+        passableMaterials.add(Material.ACTIVATOR_RAIL);
+        passableMaterials.add(Material.COBWEB);
+        passableMaterials.add(Material.VINE);
+
+        passableMaterials.add(Material.WATER);
+        passableMaterials.add(Material.LAVA);
     }
 
     public void renderPath(@NotNull Path path) {
@@ -98,58 +144,119 @@ public class PathRenderer {
                 continue;
             }
 
-            double dx = next.getX() - current.getX();
-            double dy = next.getY() - current.getY();
-            double dz = next.getZ() - current.getZ();
-
-            double distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-            int steps = Math.max(5, (int)(distance * density * 1.5));
-            boolean significantHeightChange = Math.abs(dy) > 0.5;
-
-            for (int step = 0; step < steps; step++) {
-                double progress = (double) step / steps;
-                double x = current.getX() + (dx * progress);
-                double y = current.getY() + (dy * progress);
-                double z = current.getZ() + (dz * progress);
-
-                Location testLoc = new Location(world, x, y, z);
-
-                Block block = world.getBlockAt(testLoc);
-                if (!block.isPassable() && !block.isLiquid()) {
-                    boolean adjusted = false;
-
-                    for (double yOffset = 0.1; yOffset <= 1.0; yOffset += 0.1) {
-                        Location adjustedLoc = new Location(world, x, y + yOffset, z);
-                        Block adjustedBlock = world.getBlockAt(adjustedLoc);
-
-                        if (adjustedBlock.isPassable() || adjustedBlock.isLiquid()) {
-                            y += yOffset;
-                            adjusted = true;
-                            break;
-                        }
-                    }
-
-                    if (!adjusted) continue;
-                }
-
-                y += heightOffset;
-
-                if (significantHeightChange && step > 0 && step < steps - 1) {
-                    float size = 1.0f;
-                    particlePath.add(new ParticlePoint(new Location(world, x, y, z), size));
-
-                    if (Math.abs(dy) > 1.0 && step % 2 == 0) {
-                        double verticalOffset = dy > 0 ? 0.5 : -0.5;
-                        particlePath.add(new ParticlePoint(new Location(world, x, y + verticalOffset, z), 0.5f));
-                    }
-                } else {
-                    float size = 0.6f + (step == 0 || step == steps - 1 ? 0.2f : 0f);
-                    particlePath.add(new ParticlePoint(new Location(world, x, y, z), size));
-                }
-            }
+            List<ParticlePoint> segmentPoints = generatePathSegmentWithObstacleAvoidance(current, next, world);
+            particlePath.addAll(segmentPoints);
         }
 
         return particlePath;
+    }
+
+    @NotNull
+    private List<ParticlePoint> generatePathSegmentWithObstacleAvoidance(@NotNull PathPoint start, @NotNull PathPoint end, World world) {
+        List<ParticlePoint> segmentPoints = new ArrayList<>();
+
+        double dx = end.getX() - start.getX();
+        double dy = end.getY() - start.getY();
+        double dz = end.getZ() - start.getZ();
+
+        double distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        int steps = Math.max(5, (int)(distance * density * 1.5));
+        boolean significantHeightChange = Math.abs(dy) > 0.5;
+
+        for (int step = 0; step < steps; step++) {
+            double progress = (double) step / steps;
+            double x = start.getX() + (dx * progress);
+            double y = start.getY() + (dy * progress);
+            double z = start.getZ() + (dz * progress);
+
+            Location pointLoc = new Location(world, x, y, z);
+            Block block = world.getBlockAt(pointLoc);
+
+            if (!isBlockPassable(block)) {
+                boolean foundPath = false;
+
+                for (double yOffset = 0.1; yOffset <= 2.0; yOffset += 0.1) {
+                    Location adjustedLoc = new Location(world, x, y + yOffset, z);
+                    Block adjustedBlock = world.getBlockAt(adjustedLoc);
+
+                    if (isBlockPassable(adjustedBlock)) {
+                        Block blockAbove = world.getBlockAt((int)x, (int)(y + yOffset + 1), (int)z);
+                        if (isBlockPassable(blockAbove)) {
+                            y += yOffset;
+                            foundPath = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!foundPath) {
+                    double bestDistance = Double.MAX_VALUE;
+                    Location bestLocation = null;
+
+                    for (int offsetX = -1; offsetX <= 1; offsetX++) {
+                        for (int offsetZ = -1; offsetZ <= 1; offsetZ++) {
+                            if (offsetX == 0 && offsetZ == 0) continue;
+
+                            for (int offsetY = -1; offsetY <= 1; offsetY++) {
+                                Location testLoc = new Location(world,
+                                        x + offsetX,
+                                        y + offsetY,
+                                        z + offsetZ);
+
+                                Block testBlock = world.getBlockAt(testLoc);
+                                if (isBlockPassable(testBlock)) {
+                                    Block above = world.getBlockAt(testLoc.clone().add(0, 1, 0));
+                                    if (isBlockPassable(above)) {
+                                        double deviation = testLoc.distance(pointLoc);
+
+                                        Vector toEnd = new Vector(
+                                                end.getX() - testLoc.getX(),
+                                                end.getY() - testLoc.getY(),
+                                                end.getZ() - testLoc.getZ()
+                                        );
+
+                                        double score = deviation + (toEnd.length() * 0.5);
+
+                                        if (score < bestDistance) {
+                                            bestDistance = score;
+                                            bestLocation = testLoc;
+                                            foundPath = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (bestLocation != null) {
+                        x = bestLocation.getX();
+                        y = bestLocation.getY();
+                        z = bestLocation.getZ();
+                    } else continue;
+                }
+            }
+
+            y += heightOffset;
+
+            if (significantHeightChange && step > 0 && step < steps - 1) {
+                float size = 1.0f;
+                segmentPoints.add(new ParticlePoint(new Location(world, x, y, z), size));
+
+                if (Math.abs(dy) > 1.0 && step % 2 == 0) {
+                    double verticalOffset = dy > 0 ? 0.5 : -0.5;
+                    segmentPoints.add(new ParticlePoint(new Location(world, x, y + verticalOffset, z), 0.5f));
+                }
+            } else {
+                float size = 0.6f + (step == 0 || step == steps - 1 ? 0.2f : 0f);
+                segmentPoints.add(new ParticlePoint(new Location(world, x, y, z), size));
+            }
+        }
+
+        return segmentPoints;
+    }
+
+    private boolean isBlockPassable(@NotNull Block block) {
+        return passableMaterials.contains(block.getType()) || block.isPassable() || block.isLiquid();
     }
 
     @NotNull

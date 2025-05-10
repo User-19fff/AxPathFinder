@@ -32,6 +32,11 @@ public class PathManager {
     public void startPath(@Nullable Player player, @Nullable String pathType) {
         if (player == null || pathType == null) return;
 
+        UUID playerUUID = player.getUniqueId();
+        for (Path path : activePaths.values()) {
+            if (path.getPlayerUUID().equals(playerUUID)) return;
+        }
+
         Section pathConfig = plugin.getPaths().getSection("paths." + pathType);
 
         if (pathConfig == null) {

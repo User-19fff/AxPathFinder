@@ -21,15 +21,20 @@ paths:
     messages:
       started:
         - ""
-        - "&aKövesd a kijelölt részecskéket, hogy odatalálj a célhoz!"
+        - "&d&lSANDRA"
+        - "&7Follow the &denchant bugs &7to see the town's enchant table!"
         - ""
       finished:
         - ""
-        - "&dIdeértél!"
+        - "&d&lSANDRA"
+        - "&7Phew, it was right in time before closing, but you got it! From now on you can,"
+        - "&7teleport here via Amanda!"
         - ""
       expired:
         - ""
-        - "&cAz útvonal ideje lejárt!"
+        - "&d&lSANDRA"
+        - "&cNoo, you are late! Please return to me to make another appointment,"
+        - "&cto the town's enchant table's boss for you..."
         - ""
     settings:
       duration: 120
